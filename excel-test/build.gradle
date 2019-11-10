@@ -1,0 +1,9 @@
+compileJava {
+    options.compilerArgs << '-Adebug'
+}
+
+dependencies {
+    compile 'org.springframework:spring-webmvc:5.1.8.RELEASE'
+    compile project(':excel-base')
+    annotationProcessor project(':excel-processor')
+}
