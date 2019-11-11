@@ -20,6 +20,12 @@ public @interface Sheet {
 
     int contentRowHeight() default 0;
 
+    boolean indexIncluded() default false;
+
+    I18n i18n() default @I18n;
+
+    boolean i18nSupport() default true;
+
     Header[] headers() default {};
 
     Category[] categories() default {};

@@ -17,5 +17,7 @@ public @interface Category {
 
     int end();
 
-    CellStyle style();
+    boolean i18nSupport() default true;
+
+    CellStyle style() default @CellStyle;
 }

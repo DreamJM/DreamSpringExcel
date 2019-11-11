@@ -15,7 +15,9 @@ public @interface Header {
 
     String field() default "";
 
-    int width();
+    int width() default 12;
 
     CellStyle style() default @CellStyle;
+
+    boolean i18nSupport() default true;
 }

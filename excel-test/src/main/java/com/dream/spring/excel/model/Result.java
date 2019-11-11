@@ -1,4 +1,4 @@
-package com.dream.spring.excel;
+package com.dream.spring.excel.model;
 
 import com.dream.spring.excel.annotation.SheetWrapper;
 

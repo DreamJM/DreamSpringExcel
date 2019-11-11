@@ -17,10 +17,7 @@ import javax.lang.model.type.*;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author DreamJM
@@ -110,9 +107,8 @@ public class ExcelExportProcessor extends AbstractProcessor {
                 continue;
             }
             String paramName = variable.getSimpleName().toString();
-            if (processingEnv.getTypeUtils()
-                    .isSubtype(variable.asType(),
-                            processingEnv.getElementUtils().getTypeElement("javax.servlet.ServletResponse").asType())) {
+            if (processingEnv.getTypeUtils().isSubtype(variable.asType(),
+                    processingEnv.getElementUtils().getTypeElement("javax.servlet.http.HttpServletResponse").asType())) {
                 servletRespName = paramName;
             }
             paramNames.add(paramName);
@@ -145,6 +141,15 @@ public class ExcelExportProcessor extends AbstractProcessor {
         if (!ioExceptionIncluded) {
             builder.addException(TypeName.get(processingEnv.getElementUtils().getTypeElement("java.io.IOException").asType()));
         }
+        // Response Header
+        if (!"".equals(method.getAnnotation().fileName())) {
+            builder.addStatement("$1L.setHeader(\"Content-Disposition\",\"attachment;filename=$2L.xlsx\")", servletRespName,
+                    method.getAnnotation().fileName());
+        } else {
+            builder.addStatement("$1L.setHeader(\"Content-Disposition\",\"attachment;filename=\"+System.currentTimeMillis()+\".xlsx\")",
+                    servletRespName);
+        }
+        builder.addStatement("$1L.setContentType(\"application/msexcel\")", servletRespName);
         // Get Controller's result
         String params = method.getMethodElement().getParameters().stream().map(param -> {
             ParamIgnore ignore = param.getAnnotation(ParamIgnore.class);
@@ -188,40 +193,58 @@ public class ExcelExportProcessor extends AbstractProcessor {
             error("@Sheet Annotation Missing on " + sheetType.toString());
             throw new RuntimeException("@Sheet Annotation Missing");
         }
+        String i18nMethod = parseI18nMethod(sheetAnn.i18n());
         // SheetStyle
         builder.addStatement(
-                CodeBlock.of("$1L.Builder styleBuilder = $1L.Builder.builder(\"$2L\")", SheetStyle.class.getName(), sheetAnn.value()));
+                CodeBlock.of("$1L.Builder styleBuilder = $1L.Builder.builder($2L)", SheetStyle.class.getName(),
+                        parseI18nParam(i18nMethod, sheetAnn.value(), sheetAnn.i18nSupport())));
         builder.addStatement(CodeBlock.of("styleBuilder.setDefaultWidth($1L)", sheetAnn.defaultWidth()));
         builder.addStatement(CodeBlock.of("styleBuilder.setDefaultHeaderHeight($1L)", sheetAnn.defaultHeaderHeight()));
         builder.addStatement(CodeBlock.of("styleBuilder.setContentRowHeight($1L)", sheetAnn.contentRowHeight()));
         // Headers
-        builder.addStatement(CodeBlock.of("$1L[] headers = new $1L[$2L]", ColumnHeader.class.getName(), sheetAnn.headers().length));
+        int offset = sheetAnn.indexIncluded() ? 1 : 0;
+        builder.addStatement(
+                CodeBlock.of("$1L[] headers = new $1L[$2L]", ColumnHeader.class.getName(), sheetAnn.headers().length + offset));
+        if (sheetAnn.indexIncluded()) {
+            builder.addStatement(CodeBlock.of("headers[0]=$1L.Builder.build($2L).setWidth(6).build()", ColumnHeader.class.getName(),
+                    parseI18nParam(i18nMethod, "No.", true)));
+        }
         for (int i = 0; i < sheetAnn.headers().length; i++) {
             Header header = sheetAnn.headers()[i];
             builder.addStatement(CodeBlock
-                    .of("headers[$1L] = $2L.Builder.builder(\"$3L\").setWidth($4L).setStyle($5L).build()", i, ColumnHeader.class.getName(),
-                            header.value(), header.width(), parseStyle(header.style())));
+                    .of("headers[$1L] = $2L.Builder.builder($3L).setWidth($4L).setStyle($5L).build()", i + offset,
+                            ColumnHeader.class.getName(), parseI18nParam(i18nMethod, header.value(), header.i18nSupport()), header.width(),
+                            parseStyle(header.style())));
         }
         // Categories
         builder.addStatement(CodeBlock.of("$1L[] categories = new $1L[$2L]", HeaderCategory.class.getName(), sheetAnn.categories().length));
         for (int i = 0; i < sheetAnn.categories().length; i++) {
             Category category = sheetAnn.categories()[i];
             builder.addStatement(CodeBlock
-                    .of("categories[$1L] = $2L.Builder.builder(\"$3L\",$4L,$5L).setStyle($5L).build()", i, category.value(),
-                            category.start(), category.end(), parseStyle(category.style())));
+                    .of("categories[$1L] = $2L.Builder.builder($3L,$4L,$5L).setStyle($6L).build()", i, HeaderCategory.class.getName(),
+                            parseI18nParam(i18nMethod, category.value(), category.i18nSupport()), category.start() + offset,
+                            category.end() + offset, parseStyle(category.style())));
         }
         // Data
         builder.addStatement(CodeBlock
                 .of("java.util.List<java.util.Map<Integer, $1L>> dataset = new java.util.ArrayList<>()", CellData.class.getName()));
-        builder.addCode(CodeBlock.of("for($1L line : sheet) {\n", sheetType));
+        builder.addCode(CodeBlock.of("int i = 1;\nfor($1L line : sheet) {\n", sheetType));
         builder.addStatement(CodeBlock.of("java.util.Map<Integer,$1L> item = new java.util.HashMap<>()", CellData.class.getName()));
+        if (sheetAnn.indexIncluded()) {
+            builder.addStatement(CodeBlock.of("item.put(0,$1L.Builder.builder(String.valueOf(i)).build())", CellData.class.getName()));
+        }
         for (int i = 0; i < sheetAnn.headers().length; i++) {
             Header header = sheetAnn.headers()[i];
             Cell cellAnn = findFieldAnnotation(sheetType, header.field());
-            String commonCode = "item.put($1L,$2L.Builder.builder($3L.$4L(line$5L))";
+            String commonCode;
+            if (cellAnn != null && cellAnn.i18nSupport()) {
+                commonCode = "item.put($1L,$2L.Builder.builder(" + String.format(i18nMethod, "$3L.$4L(line$5L)") + ")";
+            } else {
+                commonCode = "item.put($1L,$2L.Builder.builder($3L.$4L(line$5L))";
+            }
             if (cellAnn == null) {
                 builder.addStatement(
-                        CodeBlock.of(commonCode + ".build())", i, CellData.class.getName(), String.class.getName(), "valueOf",
+                        CodeBlock.of(commonCode + ".build())", i + offset, CellData.class.getName(), StringUtils.class.getName(), "valueOf",
                                 parseFieldGet(header.field())));
             } else {
                 String className = "String";
@@ -231,14 +254,14 @@ public class ExcelExportProcessor extends AbstractProcessor {
                     className = mte.getTypeMirror().toString();
                 }
                 builder.addStatement(
-                        CodeBlock.of(commonCode + ".setType($6L).setStyle($7L).build())", i, CellData.class.getName(), className,
+                        CodeBlock.of(commonCode + ".setType($6L).setStyle($7L).build())", i + offset, CellData.class.getName(), className,
                                 cellAnn.converter().method(), parseFieldGet(header.field()),
                                 CellType.class.getName() + "." + cellAnn.type().name(),
                                 parseStyle(cellAnn.style())));
             }
         }
         builder.addStatement("dataset.add(item)");
-        builder.addCode(CodeBlock.of("}\n"));
+        builder.addCode(CodeBlock.of("i++;\n}\n"));
         // Compose Excel Exporter
         builder.addStatement(CodeBlock.of("new $1L(styleBuilder.build(),headers,categories,dataset,$2L.getOutputStream()).exportExcel()",
                 ExportExcel.class.getName(), respParamName));
@@ -253,7 +276,7 @@ public class ExcelExportProcessor extends AbstractProcessor {
         return sb.toString();
     }
 
-    private Cell findFieldAnnotation(DeclaredType type, String fieldStr) {
+    private Cell findFieldAnnotation(TypeMirror type, String fieldStr) {
         String[] fields = fieldStr.split("[.]");
         if (fields.length == 0) {
             return null;
@@ -261,20 +284,33 @@ public class ExcelExportProcessor extends AbstractProcessor {
         Element element = null;
         for (String field : fields) {
             element = findChild(type, field);
-            type = (DeclaredType) processingEnv.getTypeUtils().asMemberOf(type, element);
+            type = processingEnv.getTypeUtils().asMemberOf((DeclaredType) type, element);
         }
         return element.getAnnotation(Cell.class);
     }
 
-    private Element findChild(DeclaredType type, String field) {
-        Element element = type.asElement();
-        for (Element childElem : element.getEnclosedElements()) {
-            if (childElem.getSimpleName().toString().equals(field)) {
-                return childElem;
+    private Element findChild(TypeMirror type, String field) {
+        List<Element> elements = new ArrayList<>();
+        composeAllElements(processingEnv.getTypeUtils().asElement(type), elements);
+        for (Element element : elements) {
+            for (Element childElem : element.getEnclosedElements()) {
+                if (ElementKind.FIELD.equals(childElem.getKind()) && childElem.getSimpleName().toString().equals(field)) {
+                    return childElem;
+                }
             }
         }
         error("Field " + field + " not found in " + type.toString());
         throw new RuntimeException("Field " + field + " not found!");
+    }
+
+    private void composeAllElements(Element element, List<Element> elements) {
+        elements.add(element);
+        for (TypeMirror type : processingEnv.getTypeUtils().directSupertypes(element.asType())) {
+            Element parentElem = ((DeclaredType) type).asElement();
+            if (ElementKind.CLASS.equals(parentElem.getKind()) && !"java.lang.Object".equals(parentElem.getSimpleName().toString())) {
+                composeAllElements(parentElem, elements);
+            }
+        }
     }
 
     private boolean isCollection(TypeMirror type) {
@@ -288,6 +324,21 @@ public class ExcelExportProcessor extends AbstractProcessor {
         char[] cs = name.toCharArray();
         cs[0] -= 32;
         return String.valueOf(cs);
+    }
+
+    private String parseI18nMethod(I18n i18nAnn) {
+        String className = "String";
+        try {
+            i18nAnn.clazz();
+        } catch (MirroredTypeException mte) {
+            className = mte.getTypeMirror().toString();
+        }
+        return className + "." + i18nAnn.method() + "(%1$s)";
+    }
+
+    private String parseI18nParam(String i18nMethod, String value, boolean supported) {
+        String quoteValue = "\"" + value + "\"";
+        return supported ? String.format(i18nMethod, quoteValue) : quoteValue;
     }
 
     private String parseStyle(CellStyle style) {

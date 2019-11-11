@@ -19,4 +19,6 @@ public @interface Cell {
     CellStyle style() default @CellStyle;
 
     Converter converter() default @Converter;
+
+    boolean i18nSupport() default false;
 }
