@@ -1,8 +1,6 @@
 package com.dream.spring.excel.controller;
 
-import com.dream.spring.excel.annotation.ExcelExport;
-import com.dream.spring.excel.annotation.ExcelSupport;
-import com.dream.spring.excel.annotation.ParamIgnore;
+import com.dream.spring.excel.annotation.*;
 import com.dream.spring.excel.model.Component;
 import com.dream.spring.excel.model.PageResult;
 import com.dream.spring.excel.model.Result;
@@ -26,7 +24,8 @@ import java.util.List;
 public class TestController {
 
     @ApiOperation("测试")
-    @ExcelExport(value = "/api/excel/test")
+    @ExcelExport(value = "/api/excel/test", annotations = {@AnnotationDef(clazz = TestAnnotation.class, members = {@AnnotationMember(name = "value", value="\"hello\""),
+            @AnnotationMember(name = "children", value="value=\"child\"", annotation = ChildValue.class)})})
     @GetMapping("/api/test")
     public Result<PageResult<Test>> test(@RequestParam String param1, @ParamIgnore("-1") @RequestParam int type,
                                          @ParamIgnore @RequestParam(required = false) Integer pageNum,

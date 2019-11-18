@@ -33,6 +33,10 @@ public class SheetStyle {
         return contentRowHeight;
     }
 
+    public static Builder builder(String title) {
+        return new Builder(title);
+    }
+
     public static class Builder {
 
         private SheetStyle style;
@@ -40,10 +44,6 @@ public class SheetStyle {
         private Builder(String title) {
             style = new SheetStyle();
             style.title = title;
-        }
-
-        public static Builder builder(String title) {
-            return new Builder(title);
         }
 
         public Builder setDefaultWidth(int defaultWidth) {

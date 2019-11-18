@@ -1,6 +1,5 @@
 package com.dream.spring.excel.annotation;
 
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -9,12 +8,12 @@ import java.lang.annotation.Target;
  * @author DreamJM
  */
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.METHOD)
-public @interface ExcelExport {
+@Target({})
+public @interface AnnotationMember {
+
+    String name();
 
     String value();
 
-    String fileName() default "";
-
-    AnnotationDef[] annotations() default {};
+    Class<?> annotation() default AnnotationIgnore.class;
 }

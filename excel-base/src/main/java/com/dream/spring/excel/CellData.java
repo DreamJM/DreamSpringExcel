@@ -29,16 +29,16 @@ public class CellData {
         return style;
     }
 
+    public static Builder builder(String value) {
+        return new Builder(value);
+    }
+
     public static class Builder {
         private CellData cell;
 
         private Builder(String value) {
             this.cell = new CellData();
             this.cell.value = value;
-        }
-
-        public static Builder builder(String value) {
-            return new Builder(value);
         }
 
         public Builder setType(CellType type) {

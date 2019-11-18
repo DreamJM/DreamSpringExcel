@@ -53,7 +53,7 @@ public class ExportExcel {
         int contentOffset = prepareHeader(workbook, sheet);
         sheet.createFreezePane(0, contentOffset, 0, contentOffset);
 
-        XSSFCellStyle contentStyle = getContentCellStyle(workbook, CustomStyle.Builder.builder().build());
+        XSSFCellStyle contentStyle = getContentCellStyle(workbook, CustomStyle.builder().build());
         for (int i = 0; i < dataset.size(); i++) {
             Map<Integer, CellData> vpd = dataset.get(i);
             SXSSFRow sheetRow = sheet.createRow(i + contentOffset);
@@ -61,7 +61,7 @@ public class ExportExcel {
                 sheetRow.setHeight((short) (sheetStyle.getContentRowHeight() * 20));
             }
             for (int j = 0; j < headers.length; j++) {
-                CellData cellData = vpd.getOrDefault(j, CellData.Builder.builder("").build());
+                CellData cellData = vpd.getOrDefault(j, CellData.builder("").build());
                 SXSSFCell cell = sheetRow.createCell(j);
                 cell.setCellStyle(cellData.getStyle() != null ? getContentCellStyle(workbook, cellData.getStyle()) : contentStyle);
                 cell.setCellType(cellData.getType() == null ? CellType.STRING : cellData.getType());
@@ -72,7 +72,7 @@ public class ExportExcel {
     }
 
     private int prepareHeader(SXSSFWorkbook workbook, SXSSFSheet sheet) {
-        XSSFCellStyle headerStyle = getHeaderCellStyle(workbook, CustomStyle.Builder.builder().build());
+        XSSFCellStyle headerStyle = getHeaderCellStyle(workbook, CustomStyle.builder().build());
         SXSSFRow headerRow = sheet.createRow(categories == null || categories.length == 0 ? 0 : 1);
         headerRow.setHeight((short) (sheetStyle.getDefaultHeaderHeight() * 20));
         int contentOffset = 1;

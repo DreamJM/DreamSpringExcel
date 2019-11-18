@@ -33,6 +33,10 @@ public class HeaderCategory {
         return style;
     }
 
+    public static Builder builder(String name, int start, int end) {
+        return new Builder(name, start, end);
+    }
+
     public static class Builder {
 
         private HeaderCategory category;
@@ -42,10 +46,6 @@ public class HeaderCategory {
             category.name = name;
             category.start = start;
             category.end = end;
-        }
-
-        public static Builder builder(String name, int start, int end) {
-            return new Builder(name, start, end);
         }
 
         public Builder setStyle(CustomStyle style) {

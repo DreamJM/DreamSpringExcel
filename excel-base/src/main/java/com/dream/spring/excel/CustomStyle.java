@@ -30,15 +30,15 @@ public class CustomStyle {
         return verticalAlignment;
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
     public static class Builder {
         private CustomStyle style;
 
         private Builder() {
             style = new CustomStyle();
-        }
-
-        public static Builder builder() {
-            return new Builder();
         }
 
         public Builder setBg(Short bg) {

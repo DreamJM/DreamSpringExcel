@@ -8,13 +8,11 @@ import java.lang.annotation.Target;
 /**
  * @author DreamJM
  */
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface ExcelExport {
+public @interface TestAnnotation {
 
     String value();
 
-    String fileName() default "";
-
-    AnnotationDef[] annotations() default {};
+    ChildValue[] children() default {};
 }

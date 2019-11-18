@@ -27,6 +27,10 @@ public class ColumnHeader {
         return style;
     }
 
+    public static Builder builder(String header) {
+        return new Builder(header);
+    }
+
     public static class Builder {
 
         private ColumnHeader header;
@@ -34,10 +38,6 @@ public class ColumnHeader {
         private Builder(String header) {
             this.header = new ColumnHeader();
             this.header.header = header;
-        }
-
-        public static Builder builder(String header) {
-            return new Builder(header);
         }
 
         public Builder setWidth(Integer width) {
