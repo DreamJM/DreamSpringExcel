@@ -13,7 +13,7 @@ public @interface AnnotationMember {
 
     String name();
 
-    String value();
+    String[] value();
 
     Class<?> annotation() default AnnotationIgnore.class;
 }

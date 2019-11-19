@@ -9,7 +9,8 @@ import java.util.Date;
 /**
  * @author DreamJM
  */
-@Sheet(value = "Test", headers = {@Header(value = "名称", field = "name", width = 15), @Header(value = "值", field = "value"),
+@Sheet(value = "Test", indexIncluded = true, headers = {@Header(value = "名称", field = "name", width = 15),
+        @Header(value = "值", field = "value"),
         @Header(value = "日期", field = "date", width = 20)})
 public class Test extends BaseTest {
 

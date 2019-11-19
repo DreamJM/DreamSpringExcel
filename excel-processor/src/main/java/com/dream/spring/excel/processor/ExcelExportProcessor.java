@@ -6,9 +6,6 @@ import com.google.auto.service.AutoService;
 import com.squareup.javapoet.*;
 import io.swagger.annotations.Api;
 import org.apache.poi.ss.usermodel.CellType;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -32,6 +29,11 @@ public class ExcelExportProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        TypeElement springCheck = processingEnv.getElementUtils().getTypeElement("org.springframework.web.bind.annotation.RestController");
+        if (springCheck == null) {
+            error("Spring Web Not Found!!!");
+            return false;
+        }
         Map<String, ControllerModel> controllers = new HashMap<>();
         for (Element element : roundEnv.getElementsAnnotatedWith(ExcelSupport.class)) {
             TypeElement typeElement = (TypeElement) element;
@@ -53,7 +55,6 @@ public class ExcelExportProcessor extends AbstractProcessor {
                     controller.addMethod(new ExcelMethodModel(exportAnn, (ExecutableElement) childElem, typeElement));
                 }
             }
-
         }
         for (ControllerModel controller : controllers.values()) { //FIXME: just support one round compile only
             generateExcelController(controller, processingEnv.getFiler());
@@ -65,15 +66,20 @@ public class ExcelExportProcessor extends AbstractProcessor {
         try (Writer sw = filer.createSourceFile(controller.getFullName()).openWriter()) {
             log("Generating " + controller.getFullName() + " source code");
             TypeSpec.Builder typeBuilder =
-                    TypeSpec.classBuilder(controller.getName()).addModifiers(Modifier.PUBLIC).addAnnotation(RestController.class)
-                            .addAnnotation(AnnotationSpec.builder(Api.class).addMember("tags", "\"Excel Export API\"")
-                                    .addMember("description",
-                                            "\"" + controller.getTags().stream().reduce((s1, s2) -> s1 + "," + s2).orElse("") + "\"")
-                                    .build());
+                    TypeSpec.classBuilder(controller.getName()).addModifiers(Modifier.PUBLIC).addAnnotation(AnnotationSpec.builder(ClassName
+                            .get(processingEnv.getElementUtils().getTypeElement("org.springframework.web.bind.annotation.RestController")))
+                            .build());
+            if (processingEnv.getElementUtils().getTypeElement("io.swagger.annotations.Api") != null) {
+                typeBuilder.addAnnotation(AnnotationSpec.builder(Api.class).addMember("tags", "\"Excel Export API\"")
+                        .addMember("description",
+                                "\"" + controller.getTags().stream().reduce((s1, s2) -> s1 + "," + s2).orElse("") + "\"")
+                        .build());
+            }
             for (TypeElement ref : controller.getRefs()) {
                 typeBuilder
                         .addField(FieldSpec.builder(TypeName.get(ref.asType()), controller.getRefName(ref)).addAnnotation(
-                                Autowired.class).build());
+                                AnnotationSpec.builder(ClassName.get(processingEnv.getElementUtils()
+                                        .getTypeElement("org.springframework.beans.factory.annotation.Autowired"))).build()).build());
             }
             for (ExcelMethodModel method : controller.getMethods()) {
                 typeBuilder.addMethod(generateMethod(method, controller));
@@ -97,31 +103,10 @@ public class ExcelExportProcessor extends AbstractProcessor {
             }
         }
         builder.addAnnotation(
-                AnnotationSpec.builder(GetMapping.class).addMember("value", "\"" + method.getAnnotation().value() + "\"").build());
-        for (AnnotationDef annDef : method.getAnnotation().annotations()) {
-            String annName = null;
-            try {
-                annDef.clazz();
-            } catch (MirroredTypeException mte) {
-                annName = mte.getTypeMirror().toString();
-            }
-            AnnotationSpec.Builder annBuilder =
-                    AnnotationSpec.builder(ClassName.get(processingEnv.getElementUtils().getTypeElement(annName)));
-            for (AnnotationMember member : annDef.members()) {
-                String memberAnnName = null;
-                try {
-                    member.annotation();
-                } catch (MirroredTypeException mte) {
-                    memberAnnName = mte.getTypeMirror().toString();
-                }
-                String value = member.value();
-                if (!"com.dream.spring.excel.annotation.AnnotationIgnore".equals(memberAnnName)) {
-                    value = String.format("{@%1$s(%2$s)}", memberAnnName, value);
-                }
-                annBuilder.addMember(member.name(), value);
-            }
-            builder.addAnnotation(annBuilder.build());
-        }
+                AnnotationSpec.builder(
+                        ClassName.get(processingEnv.getElementUtils().getTypeElement("org.springframework.web.bind.annotation.GetMapping")))
+                        .addMember("value", "\"" + method.getAnnotation().value() + "\"").build());
+        builder.addAnnotations(buildAnnotations(method.getAnnotation().annotations()));
         // Parameters
         Set<String> paramNames = new HashSet<>();
         String servletRespName = null;
@@ -193,6 +178,53 @@ public class ExcelExportProcessor extends AbstractProcessor {
         return builder.build();
     }
 
+    private List<AnnotationSpec> buildAnnotations(AnnotationDef[] annDefs) {
+        List<AnnotationSpec> annSpecs = new ArrayList<>();
+        for (AnnotationDef annDef : annDefs) {
+            String annName = null;
+            try {
+                annDef.clazz();
+            } catch (MirroredTypeException mte) {
+                annName = mte.getTypeMirror().toString();
+            }
+            AnnotationSpec.Builder annBuilder =
+                    AnnotationSpec.builder(ClassName.get(processingEnv.getElementUtils().getTypeElement(annName)));
+            for (AnnotationMember member : annDef.members()) {
+                String memberAnnName = null;
+                try {
+                    member.annotation();
+                } catch (MirroredTypeException mte) {
+                    memberAnnName = mte.getTypeMirror().toString();
+                }
+                String[] values = member.value();
+                StringBuilder strValue = new StringBuilder();
+                if (values.length > 1) {
+                    strValue.append("{");
+                }
+                for (int i = 0; i < values.length; i++) {
+                    String value = values[i];
+                    if (!"com.dream.spring.excel.annotation.AnnotationIgnore".equals(memberAnnName)) {
+                        strValue.append("@").append(memberAnnName);
+                        if (!"".equals(value)) {
+                            strValue.append("(").append(value).append(")");
+                        }
+                    } else {
+                        strValue.append(value);
+                    }
+                    if (i < values.length - 1) {
+                        strValue.append(",");
+                    }
+                }
+                if (values.length > 1) {
+                    strValue.append("}");
+                }
+                annBuilder.addMember(member.name(), strValue.toString());
+            }
+            annSpecs.add(annBuilder.build());
+        }
+        return annSpecs;
+    }
+
     private DeclaredType findSheet(DeclaredType type, StringBuilder sheetAccessBuilder) {
         Element element = type.asElement();
         for (Element childElem : element.getEnclosedElements()) {
@@ -230,7 +262,7 @@ public class ExcelExportProcessor extends AbstractProcessor {
         builder.addStatement(
                 CodeBlock.of("$1L[] headers = new $1L[$2L]", ColumnHeader.class.getName(), sheetAnn.headers().length + offset));
         if (sheetAnn.indexIncluded()) {
-            builder.addStatement(CodeBlock.of("headers[0]=$1L.Builder.build($2L).setWidth(6).build()", ColumnHeader.class.getName(),
+            builder.addStatement(CodeBlock.of("headers[0]=$1L.builder($2L).setWidth(6).build()", ColumnHeader.class.getName(),
                     parseI18nParam(i18nMethod, "No.", true)));
         }
         for (int i = 0; i < sheetAnn.headers().length; i++) {
