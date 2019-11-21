@@ -9,17 +9,16 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target({})
-public @interface Header {
+public @interface HeaderNote {
 
-    String value();
+    boolean necessary() default false;
 
-    String field() default "";
+    String content() default "";
 
-    int width() default 12;
+    boolean brace() default true;
 
-    CellStyle style() default @CellStyle;
+    boolean wrapLine() default true;
 
-    boolean i18nSupport() default true;
+    boolean i18nSupported() default true;
 
-    HeaderNote note() default @HeaderNote;
 }

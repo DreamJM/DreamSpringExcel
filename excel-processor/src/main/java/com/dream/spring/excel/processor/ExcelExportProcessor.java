@@ -96,15 +96,24 @@ public class ExcelExportProcessor extends AbstractProcessor {
                 MethodSpec.methodBuilder(method.getMethodElement().getSimpleName().toString()).addModifiers(Modifier.PUBLIC)
                         .returns(void.class);
         // Annotations
+        String mappingMethod = "GetMapping";
         for (AnnotationMirror ann : method.getMethodElement().getAnnotationMirrors()) {
-            if (!ann.toString().startsWith("@com.dream.spring.excel.annotation") && !ann.toString()
-                    .startsWith("@org.springframework.web.bind.annotation")) {
-                builder.addAnnotation(AnnotationSpec.get(ann));
+            if (!ann.toString().startsWith("@com.dream.spring.excel.annotation")) {
+                if (!ann.toString().startsWith("@org.springframework.web.bind.annotation")) {
+                    builder.addAnnotation(AnnotationSpec.get(ann));
+                } else if (ann.toString().contains("PostMapping")) {
+                    mappingMethod = "PostMapping";
+                } else if (ann.toString().contains("PutMapping")) {
+                    mappingMethod = "PutMapping";
+                } else if (ann.toString().contains("DeleteMapping")) {
+                    mappingMethod = "DeleteMapping";
+                }
             }
         }
         builder.addAnnotation(
                 AnnotationSpec.builder(
-                        ClassName.get(processingEnv.getElementUtils().getTypeElement("org.springframework.web.bind.annotation.GetMapping")))
+                        ClassName.get(processingEnv.getElementUtils()
+                                .getTypeElement("org.springframework.web.bind.annotation." + mappingMethod)))
                         .addMember("value", "\"" + method.getAnnotation().value() + "\"").build());
         builder.addAnnotations(buildAnnotations(method.getAnnotation().annotations()));
         // Parameters
@@ -267,9 +276,23 @@ public class ExcelExportProcessor extends AbstractProcessor {
         }
         for (int i = 0; i < sheetAnn.headers().length; i++) {
             Header header = sheetAnn.headers()[i];
+            String headTitle = parseI18nParam(i18nMethod, header.value(), header.i18nSupport());
+            if (header.note().necessary()) {
+                headTitle = "\"*\"+" + headTitle;
+            }
+            if (!"".equals(header.note().content())) {
+                if (header.note().wrapLine()) {
+                    headTitle += "+\"\\n\"";
+                }
+                String note = parseI18nParam(i18nMethod, header.note().content(), header.note().i18nSupported());
+                if (header.note().brace()) {
+                    note = "\"(\"+" + note + "+\")\"";
+                }
+                headTitle += "+" + note;
+            }
             builder.addStatement(CodeBlock
                     .of("headers[$1L] = $2L.builder($3L).setWidth($4L).setStyle($5L).build()", i + offset,
-                            ColumnHeader.class.getName(), parseI18nParam(i18nMethod, header.value(), header.i18nSupport()), header.width(),
+                            ColumnHeader.class.getName(), headTitle, header.width(),
                             parseStyle(header.style())));
         }
         // Categories
