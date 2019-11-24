@@ -16,7 +16,7 @@ public @interface ExcelExport {
 
     String fileName() default "";
 
-    Cacheable cache() default @Cacheable;
+    Cacheable[] caches() default {};
 
     AnnotationDef[] annotations() default {};
 }

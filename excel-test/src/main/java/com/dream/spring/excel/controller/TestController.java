@@ -27,7 +27,7 @@ public class TestController {
 
     @ApiOperation("Test")
     @ExcelExport(value = "/api/excel/test", fileName = "test_{timestamp}",
-            cache = @Cacheable(timestampField = "date.time", confs = @CacheConf(cacheDir = "hello", condition = "param1 == null", checkUpdateMethod = "isTestUpdated(timestamp)")), annotations = {
+            caches = @Cacheable(cacheDir = "hello", condition = "param1 == null", checkUpdateMethod = "isTestUpdated(timestamp)", timestampMethod = "getTimestamp(sheet)"), annotations = {
             @AnnotationDef(clazz = TestAnnotation.class, members = {@AnnotationMember(name = "value", value = "\"hello\""),
                     @AnnotationMember(name = "children", value = "value=\"child\"", annotation = ChildValue.class)})})
     @GetMapping("/api/test")
@@ -42,6 +42,16 @@ public class TestController {
         }
         PageResult<Test> page = new PageResult<>(tests);
         return new Result<>(page);
+    }
+
+    public long getTimestamp(List<Test> sheet) {
+        long maxTimestamp = 0;
+        for (Test test : sheet) {
+            if (test.getDate() != null && test.getDate().getTime() > maxTimestamp) {
+                maxTimestamp = test.getDate().getTime();
+            }
+        }
+        return maxTimestamp;
     }
 
     public boolean isTestUpdated(long updateTimestamp) {

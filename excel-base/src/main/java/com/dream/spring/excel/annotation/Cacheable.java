@@ -10,8 +10,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target({})
 public @interface Cacheable {
+    String cacheDir();
 
-    String timestampField() default "";
+    String condition();
 
-    CacheConf[] confs() default {};
+    String timestampMethod();
+
+    String checkUpdateMethod();
 }

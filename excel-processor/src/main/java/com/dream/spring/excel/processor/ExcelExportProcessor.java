@@ -175,9 +175,9 @@ public class ExcelExportProcessor extends AbstractProcessor {
         }
         builder.addStatement("$1L.setContentType(\"application/msexcel\")", servletRespName);
         // Cache
-        if (method.getAnnotation().cache().confs().length > 0) { //
+        if (method.getAnnotation().caches().length > 0) { //
             int index = 0;
-            for (CacheConf conf : method.getAnnotation().cache().confs()) {
+            for (Cacheable conf : method.getAnnotation().caches()) {
                 builder.addCode("$1Lif($2L) {\n", index == 0 ? "" : "else ", conf.condition());
                 builder.addStatement("$1L cacheFile = $2L.newestFile(\"$3L\")", File.class.getName(), FileUtils.class.getName(),
                         conf.cacheDir());
@@ -192,7 +192,7 @@ public class ExcelExportProcessor extends AbstractProcessor {
                 builder.addCode("return;}\n");
                 builder.addCode("}\n");
                 builder.addCode("}\n");
-                index ++;
+                index++;
             }
         }
 
@@ -211,12 +211,13 @@ public class ExcelExportProcessor extends AbstractProcessor {
         builder.addStatement(sheetListType.toString() + " sheet = " + sheetAccessBuilder.toString());
         // Parse Excel Result Detail
         DeclaredType sheetType = (DeclaredType) sheetListType.getTypeArguments().get(0);
-        parseSheet(builder, sheetType, method.getAnnotation().cache().timestampField());
+        parseSheet(builder, sheetType);
         // Compose Excel Exporter
-        if (method.getAnnotation().cache().confs().length > 0) { //
+        if (method.getAnnotation().caches().length > 0) { //
             int index = 0;
-            for (CacheConf conf : method.getAnnotation().cache().confs()) {
-                builder.addCode("$1Lif($2L) {\n", index == 0 ? "":"else ", conf.condition());
+            for (Cacheable conf : method.getAnnotation().caches()) {
+                builder.addCode("$1Lif($2L) {\n", index == 0 ? "" : "else ", conf.condition());
+                builder.addStatement("long maxTimestamp = $1L.$2L", controller.getRefName(method.getRef()), conf.timestampMethod());
                 builder.addStatement("$1L cacheFile = $2L.file(\"$3L\",maxTimestamp)", File.class.getName(), FileUtils.class.getName(),
                         conf.cacheDir());
                 builder.addCode(CodeBlock.of("try($1L fos=new $1L(cacheFile)) {\n" +
@@ -230,7 +231,7 @@ public class ExcelExportProcessor extends AbstractProcessor {
                 builder.addStatement("new $1L(styleBuilder.build(),columns,categories,dataset,$2L.getOutputStream()).exportExcel()",
                         ExportExcel.class.getName(), servletRespName);
                 builder.addCode("\n}");
-                index ++;
+                index++;
             }
         } else {
             builder.addStatement("new $1L(styleBuilder.build(),columns,categories,dataset,$2L.getOutputStream()).exportExcel()",
@@ -303,7 +304,7 @@ public class ExcelExportProcessor extends AbstractProcessor {
         throw new RuntimeException("Sheet Annotation NOT FOUND!!!!");
     }
 
-    private void parseSheet(MethodSpec.Builder builder, DeclaredType sheetType, String timestampField) {
+    private void parseSheet(MethodSpec.Builder builder, DeclaredType sheetType) {
         Element sheetElem = sheetType.asElement();
         Sheet sheetAnn = sheetElem.getAnnotation(Sheet.class);
         if (sheetAnn == null) {
@@ -370,16 +371,9 @@ public class ExcelExportProcessor extends AbstractProcessor {
         // Data
         builder.addStatement(CodeBlock
                 .of("java.util.List<java.util.Map<Integer, $1L>> dataset = new java.util.ArrayList<>()", CellData.class.getName()));
-        if (timestampField.length() > 0) {
-            builder.addStatement("long maxTimestamp = 0");
-        }
         builder.addStatement(
                 CodeBlock.of("java.util.Map<String,$1L> cellStyleCache=new java.util.HashMap<>()", CustomStyle.class.getName()));
         builder.addCode(CodeBlock.of("int i = 1;\nfor($1L line : sheet) {\n", sheetType));
-        if (timestampField.length() > 0) {
-            builder.addStatement("Long lineTimestamp = line$1L", parseFieldGet(timestampField));
-            builder.addCode("if(lineTimestamp != null && lineTimestamp > maxTimestamp) {maxTimestamp=lineTimestamp;}");
-        }
         builder.addStatement(CodeBlock.of("java.util.Map<Integer,$1L> item = new java.util.HashMap<>()", CellData.class.getName()));
         if (sheetAnn.indexIncluded()) {
             builder.addStatement(CodeBlock.of("item.put(0,$1L.builder(String.valueOf(i)).build())", CellData.class.getName()));
