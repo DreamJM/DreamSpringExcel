@@ -13,8 +13,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.*;
 import javax.tools.Diagnostic;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -175,6 +174,28 @@ public class ExcelExportProcessor extends AbstractProcessor {
                     servletRespName);
         }
         builder.addStatement("$1L.setContentType(\"application/msexcel\")", servletRespName);
+        // Cache
+        if (method.getAnnotation().cache().confs().length > 0) { //
+            int index = 0;
+            for (CacheConf conf : method.getAnnotation().cache().confs()) {
+                builder.addCode("$1Lif($2L) {\n", index == 0 ? "" : "else ", conf.condition());
+                builder.addStatement("$1L cacheFile = $2L.newestFile(\"$3L\")", File.class.getName(), FileUtils.class.getName(),
+                        conf.cacheDir());
+                builder.addCode("if(cacheFile != null) {\n");
+                builder.addStatement("long timestamp = Long.parseLong(cacheFile.getName())");
+                builder.addCode("if(!$1L.$2L) {\n", controller.getRefName(method.getRef()),
+                        conf.checkUpdateMethod());
+                builder.addCode("try($1L fis=new $1L(cacheFile)) {\n" +
+                        "$2L output = $3L.getOutputStream();\nbyte[] b=new byte[1024];\nint length;\n" +
+                        "while((length=fis.read(b))>0){\noutput.write(b,0,length);\n}\n" +
+                        "output.flush();\n}\n", FileInputStream.class.getName(), OutputStream.class.getName(), servletRespName);
+                builder.addCode("return;}\n");
+                builder.addCode("}\n");
+                builder.addCode("}\n");
+                index ++;
+            }
+        }
+
         // Get Controller's result
         String params = method.getMethodElement().getParameters().stream().map(param -> {
             ParamIgnore ignore = param.getAnnotation(ParamIgnore.class);
@@ -190,7 +211,31 @@ public class ExcelExportProcessor extends AbstractProcessor {
         builder.addStatement(sheetListType.toString() + " sheet = " + sheetAccessBuilder.toString());
         // Parse Excel Result Detail
         DeclaredType sheetType = (DeclaredType) sheetListType.getTypeArguments().get(0);
-        parseSheet(builder, sheetType, servletRespName);
+        parseSheet(builder, sheetType, method.getAnnotation().cache().timestampField());
+        // Compose Excel Exporter
+        if (method.getAnnotation().cache().confs().length > 0) { //
+            int index = 0;
+            for (CacheConf conf : method.getAnnotation().cache().confs()) {
+                builder.addCode("$1Lif($2L) {\n", index == 0 ? "":"else ", conf.condition());
+                builder.addStatement("$1L cacheFile = $2L.file(\"$3L\",maxTimestamp)", File.class.getName(), FileUtils.class.getName(),
+                        conf.cacheDir());
+                builder.addCode(CodeBlock.of("try($1L fos=new $1L(cacheFile)) {\n" +
+                                "new $2L(styleBuilder.build(),columns,categories,dataset,fos).exportExcel();\n}\n",
+                        FileOutputStream.class.getName(), ExportExcel.class.getName()));
+                builder.addCode("try($1L fis=new $1L(cacheFile)) {\n" +
+                        "$2L output = $3L.getOutputStream();\nbyte[] b=new byte[1024];\nint length;\n" +
+                        "while((length=fis.read(b))>0){\noutput.write(b,0,length);\n}\n" +
+                        "output.flush();\n}\n", FileInputStream.class.getName(), OutputStream.class.getName(), servletRespName);
+                builder.addCode("\n} else {\n");
+                builder.addStatement("new $1L(styleBuilder.build(),columns,categories,dataset,$2L.getOutputStream()).exportExcel()",
+                        ExportExcel.class.getName(), servletRespName);
+                builder.addCode("\n}");
+                index ++;
+            }
+        } else {
+            builder.addStatement("new $1L(styleBuilder.build(),columns,categories,dataset,$2L.getOutputStream()).exportExcel()",
+                    ExportExcel.class.getName(), servletRespName);
+        }
         return builder.build();
     }
 
@@ -258,7 +303,7 @@ public class ExcelExportProcessor extends AbstractProcessor {
         throw new RuntimeException("Sheet Annotation NOT FOUND!!!!");
     }
 
-    private void parseSheet(MethodSpec.Builder builder, DeclaredType sheetType, String respParamName) {
+    private void parseSheet(MethodSpec.Builder builder, DeclaredType sheetType, String timestampField) {
         Element sheetElem = sheetType.asElement();
         Sheet sheetAnn = sheetElem.getAnnotation(Sheet.class);
         if (sheetAnn == null) {
@@ -325,9 +370,16 @@ public class ExcelExportProcessor extends AbstractProcessor {
         // Data
         builder.addStatement(CodeBlock
                 .of("java.util.List<java.util.Map<Integer, $1L>> dataset = new java.util.ArrayList<>()", CellData.class.getName()));
+        if (timestampField.length() > 0) {
+            builder.addStatement("long maxTimestamp = 0");
+        }
         builder.addStatement(
                 CodeBlock.of("java.util.Map<String,$1L> cellStyleCache=new java.util.HashMap<>()", CustomStyle.class.getName()));
         builder.addCode(CodeBlock.of("int i = 1;\nfor($1L line : sheet) {\n", sheetType));
+        if (timestampField.length() > 0) {
+            builder.addStatement("Long lineTimestamp = line$1L", parseFieldGet(timestampField));
+            builder.addCode("if(lineTimestamp != null && lineTimestamp > maxTimestamp) {maxTimestamp=lineTimestamp;}");
+        }
         builder.addStatement(CodeBlock.of("java.util.Map<Integer,$1L> item = new java.util.HashMap<>()", CellData.class.getName()));
         if (sheetAnn.indexIncluded()) {
             builder.addStatement(CodeBlock.of("item.put(0,$1L.builder(String.valueOf(i)).build())", CellData.class.getName()));
@@ -371,9 +423,6 @@ public class ExcelExportProcessor extends AbstractProcessor {
         }
         builder.addStatement("dataset.add(item)");
         builder.addCode(CodeBlock.of("i++;\n}\n"));
-        // Compose Excel Exporter
-        builder.addStatement(CodeBlock.of("new $1L(styleBuilder.build(),columns,categories,dataset,$2L.getOutputStream()).exportExcel()",
-                ExportExcel.class.getName(), respParamName));
     }
 
     private static String parseFieldGet(String fieldStr) {
