@@ -10,6 +10,12 @@ public class CustomStyle {
 
     private Short bg;
 
+    private Short fontColor;
+
+    private String fontName;
+
+    private int fontSize;
+
     private HorizontalAlignment horizontalAlignment = HorizontalAlignment.CENTER;
 
     private VerticalAlignment verticalAlignment = VerticalAlignment.CENTER;
@@ -20,6 +26,18 @@ public class CustomStyle {
 
     public Short getBg() {
         return bg;
+    }
+
+    public Short getFontColor() {
+        return fontColor;
+    }
+
+    public String getFontName() {
+        return fontName;
+    }
+
+    public int getFontSize() {
+        return fontSize;
     }
 
     public HorizontalAlignment getHorizontalAlignment() {
@@ -43,6 +61,21 @@ public class CustomStyle {
 
         public Builder setBg(Short bg) {
             style.bg = bg;
+            return this;
+        }
+
+        public Builder setFontColor(Short fontColor) {
+            style.fontColor = fontColor;
+            return this;
+        }
+
+        public Builder setFontName(String fontName) {
+            style.fontName = fontName;
+            return this;
+        }
+
+        public Builder setFontSize(int fontSize) {
+            style.fontSize = fontSize;
             return this;
         }
 

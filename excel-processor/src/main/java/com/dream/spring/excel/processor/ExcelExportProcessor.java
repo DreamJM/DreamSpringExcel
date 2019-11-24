@@ -1,6 +1,7 @@
 package com.dream.spring.excel.processor;
 
 import com.dream.spring.excel.*;
+import com.dream.spring.excel.annotation.Column;
 import com.dream.spring.excel.annotation.*;
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.*;
@@ -161,8 +162,14 @@ public class ExcelExportProcessor extends AbstractProcessor {
         }
         // Response Header
         if (!"".equals(method.getAnnotation().fileName())) {
-            builder.addStatement("$1L.setHeader(\"Content-Disposition\",\"attachment;filename=$2L.xlsx\")", servletRespName,
-                    method.getAnnotation().fileName());
+            String fileName = method.getAnnotation().fileName();
+            if (fileName.contains("{timestamp}")) {
+                fileName = "String.format(\"" + fileName.replace("{timestamp}", "%1$d") + "\",System.currentTimeMillis())";
+                builder.addStatement("$1L.setHeader(\"Content-Disposition\",\"attachment;filename=\"+ $2L +\".xlsx\")", servletRespName,
+                        fileName);
+            } else {
+                builder.addStatement("$1L.setHeader(\"Content-Disposition\",\"attachment;filename=$2L.xlsx\")", servletRespName, fileName);
+            }
         } else {
             builder.addStatement("$1L.setHeader(\"Content-Disposition\",\"attachment;filename=\"+System.currentTimeMillis()+\".xlsx\")",
                     servletRespName);
@@ -264,18 +271,29 @@ public class ExcelExportProcessor extends AbstractProcessor {
                 CodeBlock.of("$1L.Builder styleBuilder = $1L.builder($2L)", SheetStyle.class.getName(),
                         parseI18nParam(i18nMethod, sheetAnn.value(), sheetAnn.i18nSupport())));
         builder.addStatement(CodeBlock.of("styleBuilder.setDefaultWidth($1L)", sheetAnn.defaultWidth()));
-        builder.addStatement(CodeBlock.of("styleBuilder.setDefaultHeaderHeight($1L)", sheetAnn.defaultHeaderHeight()));
+        builder.addStatement(CodeBlock.of("styleBuilder.setHeaderHeight($1L)", sheetAnn.headerHeight()));
+        builder.addStatement(CodeBlock.of("styleBuilder.setCategoryHeight($1L)", sheetAnn.categoryHeight()));
         builder.addStatement(CodeBlock.of("styleBuilder.setContentRowHeight($1L)", sheetAnn.contentRowHeight()));
+        builder.addStatement(CodeBlock.of("styleBuilder.setDefaultHeaderStyle($1L)", parseStyle(sheetAnn.defaultHeaderStyle())));
+        builder.addStatement(CodeBlock.of("styleBuilder.setDefaultCategoryStyle($1L)", parseStyle(sheetAnn.defaultCategoryStyle())));
+        builder.addStatement(CodeBlock.of("styleBuilder.setDefaultStyle($1L)", parseStyle(sheetAnn.defaultStyle())));
+        builder.addStatement(CodeBlock.of("styleBuilder.setOffset($1L, $2L)", sheetAnn.xOffset(), sheetAnn.yOffset()));
+        builder.addStatement(CodeBlock.of("styleBuilder.setFreezeHeader($1L)", sheetAnn.freezeHeader()));
         // Headers
         int offset = sheetAnn.indexIncluded() ? 1 : 0;
         builder.addStatement(
-                CodeBlock.of("$1L[] headers = new $1L[$2L]", ColumnHeader.class.getName(), sheetAnn.headers().length + offset));
+                CodeBlock.of("$1L[] columns = new $1L[$2L]", com.dream.spring.excel.Column.class.getName(),
+                        sheetAnn.headers().length + offset));
         if (sheetAnn.indexIncluded()) {
-            builder.addStatement(CodeBlock.of("headers[0]=$1L.builder($2L).setWidth(6).build()", ColumnHeader.class.getName(),
-                    parseI18nParam(i18nMethod, "No.", true)));
+            builder.addStatement(
+                    CodeBlock.of("columns[0]=$1L.builder($2L).setWidth(6).build()", com.dream.spring.excel.Column.class.getName(),
+                            parseI18nParam(i18nMethod, "No.", true)));
         }
+        Column[] columns = new Column[sheetAnn.headers().length];
         for (int i = 0; i < sheetAnn.headers().length; i++) {
             Header header = sheetAnn.headers()[i];
+            Column column = findFieldAnnotation(sheetType, header.field());
+            columns[i] = column;
             String headTitle = parseI18nParam(i18nMethod, header.value(), header.i18nSupport());
             if (header.note().necessary()) {
                 headTitle = "\"*\"+" + headTitle;
@@ -291,9 +309,9 @@ public class ExcelExportProcessor extends AbstractProcessor {
                 headTitle += "+" + note;
             }
             builder.addStatement(CodeBlock
-                    .of("headers[$1L] = $2L.builder($3L).setWidth($4L).setStyle($5L).build()", i + offset,
-                            ColumnHeader.class.getName(), headTitle, header.width(),
-                            parseStyle(header.style())));
+                    .of("columns[$1L] = $2L.builder($3L).setWidth($4L).setHeaderStyle($5L).setStyle($6L).build()", i + offset,
+                            com.dream.spring.excel.Column.class.getName(), headTitle, header.width(),
+                            parseStyle(header.style()), column == null ? "null" : parseStyle(column.style())));
         }
         // Categories
         builder.addStatement(CodeBlock.of("$1L[] categories = new $1L[$2L]", HeaderCategory.class.getName(), sheetAnn.categories().length));
@@ -307,6 +325,8 @@ public class ExcelExportProcessor extends AbstractProcessor {
         // Data
         builder.addStatement(CodeBlock
                 .of("java.util.List<java.util.Map<Integer, $1L>> dataset = new java.util.ArrayList<>()", CellData.class.getName()));
+        builder.addStatement(
+                CodeBlock.of("java.util.Map<String,$1L> cellStyleCache=new java.util.HashMap<>()", CustomStyle.class.getName()));
         builder.addCode(CodeBlock.of("int i = 1;\nfor($1L line : sheet) {\n", sheetType));
         builder.addStatement(CodeBlock.of("java.util.Map<Integer,$1L> item = new java.util.HashMap<>()", CellData.class.getName()));
         if (sheetAnn.indexIncluded()) {
@@ -314,35 +334,45 @@ public class ExcelExportProcessor extends AbstractProcessor {
         }
         for (int i = 0; i < sheetAnn.headers().length; i++) {
             Header header = sheetAnn.headers()[i];
-            Cell cellAnn = findFieldAnnotation(sheetType, header.field());
+            Column column = columns[i];
             String commonCode;
-            if (cellAnn != null && cellAnn.i18nSupport()) {
+            if (column != null && column.i18nSupport()) {
                 commonCode = "item.put($1L,$2L.builder(" + String.format(i18nMethod, "$3L.$4L(line$5L)") + ")";
             } else {
                 commonCode = "item.put($1L,$2L.builder($3L.$4L(line$5L))";
             }
-            if (cellAnn == null) {
+            if (column == null) {
                 builder.addStatement(
                         CodeBlock.of(commonCode + ".build())", i + offset, CellData.class.getName(), StringUtils.class.getName(), "valueOf",
                                 parseFieldGet(header.field())));
             } else {
-                String className = "String";
+                String className = StringUtils.class.getName();
+                String method = "valueOf";
                 try {
-                    cellAnn.converter().clazz();
+                    column.converter().clazz();
                 } catch (MirroredTypeException mte) {
                     className = mte.getTypeMirror().toString();
+                    method = column.converter().method();
                 }
-                builder.addStatement(
-                        CodeBlock.of(commonCode + ".setType($6L).setStyle($7L).build())", i + offset, CellData.class.getName(), className,
-                                cellAnn.converter().method(), parseFieldGet(header.field()),
-                                CellType.class.getName() + "." + cellAnn.type().name(),
-                                parseStyle(cellAnn.style())));
+                builder.addStatement(CodeBlock.of("$1L cellStyle$2L=null", CustomStyle.class.getName(), i));
+                int index = 0;
+                for (CellItemStyle itemStyle : column.cellStyles()) {
+                    builder.addCode(CodeBlock.of("$1Lif($2L) {\n", index > 0 ? "else " : "",
+                            itemStyle.condition().replace("{value}", "line" + parseFieldGet(header.field()))));
+                    builder.addStatement("cellStyle$1L=cellStyleCache.computeIfAbsent(\"$1L#$2L\", key -> $3L)", i, itemStyle.condition(),
+                            parseStyle(itemStyle.style()));
+                    builder.addCode(CodeBlock.of("}\n"));
+                    index++;
+                }
+                builder.addStatement(CodeBlock.of(commonCode + ".setType($6L).setStyle(cellStyle$7L).build())", i + offset,
+                        CellData.class.getName(), className, method, parseFieldGet(header.field()),
+                        CellType.class.getName() + "." + column.type().name(), i));
             }
         }
         builder.addStatement("dataset.add(item)");
         builder.addCode(CodeBlock.of("i++;\n}\n"));
         // Compose Excel Exporter
-        builder.addStatement(CodeBlock.of("new $1L(styleBuilder.build(),headers,categories,dataset,$2L.getOutputStream()).exportExcel()",
+        builder.addStatement(CodeBlock.of("new $1L(styleBuilder.build(),columns,categories,dataset,$2L.getOutputStream()).exportExcel()",
                 ExportExcel.class.getName(), respParamName));
     }
 
@@ -355,7 +385,7 @@ public class ExcelExportProcessor extends AbstractProcessor {
         return sb.toString();
     }
 
-    private Cell findFieldAnnotation(TypeMirror type, String fieldStr) {
+    private Column findFieldAnnotation(TypeMirror type, String fieldStr) {
         String[] fields = fieldStr.split("[.]");
         if (fields.length == 0) {
             return null;
@@ -365,7 +395,7 @@ public class ExcelExportProcessor extends AbstractProcessor {
             element = findChild(type, field);
             type = processingEnv.getTypeUtils().asMemberOf((DeclaredType) type, element);
         }
-        return element.getAnnotation(Cell.class);
+        return element.getAnnotation(Column.class);
     }
 
     private Element findChild(TypeMirror type, String field) {
@@ -421,9 +451,13 @@ public class ExcelExportProcessor extends AbstractProcessor {
     }
 
     private String parseStyle(CellStyle style) {
-        return String.format("%1$s.builder().setBg((short)%2$d).setHorizontalAlignment(%3$s).setVerticalAlignment(%4$s).build()",
-                CustomStyle.class.getName(), style.backgroundColor().getIndex(),
-                style.horizontalAlignment().getClass().getName() + "." + style.horizontalAlignment().name(),
+        if (style.useDefault()) {
+            return "null";
+        }
+        return String.format(
+                "%1$s.builder().setBg((short)%2$d).setFontColor((short)%3$d).setFontName(\"%4$s\").setFontSize(%5$d).setHorizontalAlignment(%6$s).setVerticalAlignment(%7$s).build()",
+                CustomStyle.class.getName(), style.backgroundColor().getIndex(), style.fontColor().getIndex(), style.fontName(),
+                style.fontSize(), style.horizontalAlignment().getClass().getName() + "." + style.horizontalAlignment().name(),
                 style.verticalAlignment().getClass().getName() + "." + style.verticalAlignment().name());
     }
 

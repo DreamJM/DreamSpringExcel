@@ -16,7 +16,9 @@ public @interface Sheet {
 
     int defaultWidth() default 12;
 
-    int defaultHeaderHeight() default 25;
+    int headerHeight() default 25;
+
+    int categoryHeight() default 0;
 
     int contentRowHeight() default 0;
 
@@ -25,6 +27,18 @@ public @interface Sheet {
     I18n i18n() default @I18n;
 
     boolean i18nSupport() default true;
+
+    CellStyle defaultStyle() default @CellStyle(useDefault = true);
+
+    CellStyle defaultHeaderStyle() default @CellStyle(useDefault = true);
+
+    CellStyle defaultCategoryStyle() default @CellStyle(useDefault = true);
+
+    boolean freezeHeader() default true;
+
+    int xOffset() default 0;
+
+    int yOffset() default 0;
 
     Header[] headers() default {};
 

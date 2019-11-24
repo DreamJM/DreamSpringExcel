@@ -1,13 +1,13 @@
 package com.dream.spring.excel.model;
 
-import com.dream.spring.excel.annotation.Cell;
+import com.dream.spring.excel.annotation.Column;
 
 /**
  * @author DreamJM
  */
 public class BaseTest {
 
-    @Cell
+    @Column
     private String value;
 
     public BaseTest(String value) {

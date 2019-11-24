@@ -5,13 +5,20 @@ package com.dream.spring.excel.model;
  */
 public class Component {
 
-    private String component;
+    private String childName;
 
-    public Component(String component) {
-        this.component = component;
+    private String childValue;
+
+    public Component(String childName, String childValue) {
+        this.childName = childName;
+        this.childValue = childValue;
     }
 
-    public String getComponent() {
-        return component;
+    public String getChildName() {
+        return childName;
+    }
+
+    public String getChildValue() {
+        return childValue;
     }
 }

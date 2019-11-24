@@ -17,8 +17,16 @@ public @interface CellStyle {
 
     IndexedColors backgroundColor() default IndexedColors.WHITE;
 
+    IndexedColors fontColor() default IndexedColors.BLACK;
+
+    String fontName() default "";
+
+    int fontSize() default 0;
+
     HorizontalAlignment horizontalAlignment() default HorizontalAlignment.CENTER;
 
     VerticalAlignment verticalAlignment() default VerticalAlignment.CENTER;
+
+    boolean useDefault() default false;
 
 }

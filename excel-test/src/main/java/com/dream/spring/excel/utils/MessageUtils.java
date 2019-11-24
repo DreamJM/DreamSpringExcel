@@ -29,9 +29,4 @@ public class MessageUtils {
             return null;
         }
     }
-
-    public static String getError(int code, Object... params) {
-        return get("code." + code, params);
-    }
-
 }

@@ -3,15 +3,17 @@ package com.dream.spring.excel;
 /**
  * @author DreamJM
  */
-public class ColumnHeader {
+public class Column {
 
     private String header;
 
     private Integer width;
 
+    private CustomStyle headerStyle;
+
     private CustomStyle style;
 
-    private ColumnHeader() {
+    private Column() {
 
     }
 
@@ -21,6 +23,10 @@ public class ColumnHeader {
 
     public Integer getWidth() {
         return width;
+    }
+
+    public CustomStyle getHeaderStyle() {
+        return headerStyle;
     }
 
     public CustomStyle getStyle() {
@@ -33,25 +39,30 @@ public class ColumnHeader {
 
     public static class Builder {
 
-        private ColumnHeader header;
+        private Column column;
 
-        private Builder(String header) {
-            this.header = new ColumnHeader();
-            this.header.header = header;
+        private Builder(String column) {
+            this.column = new Column();
+            this.column.header = column;
         }
 
         public Builder setWidth(Integer width) {
-            header.width = width;
+            column.width = width;
+            return this;
+        }
+
+        public Builder setHeaderStyle(CustomStyle headerStyle) {
+            column.headerStyle = headerStyle;
             return this;
         }
 
         public Builder setStyle(CustomStyle style) {
-            header.style = style;
+            column.style = style;
             return this;
         }
 
-        public ColumnHeader build() {
-            return header;
+        public Column build() {
+            return column;
         }
 
     }

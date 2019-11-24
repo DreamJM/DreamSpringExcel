@@ -19,5 +19,5 @@ public @interface Category {
 
     boolean i18nSupport() default true;
 
-    CellStyle style() default @CellStyle;
+    CellStyle style() default @CellStyle(useDefault = true);
 }

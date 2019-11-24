@@ -19,23 +19,22 @@ import java.util.List;
  * @author DreamJM
  */
 @ExcelSupport
-@Api(tags = "测试接口")
+@Api(tags = "Test Api")
 @RestController
 public class TestController {
 
-    @ApiOperation("测试")
-    @ExcelExport(value = "/api/excel/test", annotations = {@AnnotationDef(clazz = TestAnnotation.class, members = {@AnnotationMember(name = "value", value="\"hello\""),
-            @AnnotationMember(name = "children", value="value=\"child\"", annotation = ChildValue.class)})})
+    @ApiOperation("Test")
+    @ExcelExport(value = "/api/excel/test", fileName = "test_{timestamp}", annotations = {
+            @AnnotationDef(clazz = TestAnnotation.class, members = {@AnnotationMember(name = "value", value = "\"hello\""),
+                    @AnnotationMember(name = "children", value = "value=\"child\"", annotation = ChildValue.class)})})
     @GetMapping("/api/test")
     public Result<PageResult<Test>> test(@RequestParam String param1, @ParamIgnore("-1") @RequestParam int type,
                                          @ParamIgnore @RequestParam(required = false) Integer pageNum,
                                          @ParamIgnore @RequestParam(required = false) Integer pageSize) {
         List<Test> tests = new ArrayList<>();
-        tests.add(new Test("hello1", "world1", 1, new Date(), new Component("component1")));
-        tests.add(new Test("hello2", "world2", 2, new Date(System.currentTimeMillis() + 20000L), new Component("component2")));
-        tests.add(new Test("hello3", "world3", 3, new Date(System.currentTimeMillis() + 40000L), new Component("component3")));
-        tests.add(new Test("hello4", "world4", 4, new Date(System.currentTimeMillis() + 60000L), new Component("component4")));
-        tests.add(new Test("hello5", "world5", 5, new Date(System.currentTimeMillis() + 80000L), new Component("component5")));
+        for (int i = 1; i <= 9; i++) {
+            tests.add(new Test("hello" + i, "world" + i, (i - 1) % 2 + 1, new Date(), new Component("child" + i, "childValue" + i)));
+        }
         PageResult<Test> page = new PageResult<>(tests);
         return new Result<>(page);
     }

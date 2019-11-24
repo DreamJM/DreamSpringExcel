@@ -12,13 +12,15 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.FIELD)
-public @interface Cell {
+public @interface Column {
 
     CellType type() default CellType.STRING;
 
-    CellStyle style() default @CellStyle;
+    CellStyle style() default @CellStyle(useDefault = true);
 
     Converter converter() default @Converter;
 
     boolean i18nSupport() default false;
+
+    CellItemStyle[] cellStyles() default {};
 }
