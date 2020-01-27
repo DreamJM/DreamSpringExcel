@@ -1,7 +1,22 @@
+apply plugin: 'maven-publish'
+
 dependencies {
     compile project(':excel-base')
     compile 'com.google.auto.service:auto-service-annotations:1.0-rc6'
     compile 'com.squareup:javapoet:1.11.1'
-    compile 'io.swagger:swagger-annotations:1.5.20'
     annotationProcessor 'com.google.auto.service:auto-service:1.0-rc6'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'com.dream.spring'
+            artifactId 'excel-processor'
+            version '1.0.0'
+
+            from components.java
+            artifact sourceJar
+            artifact javadocJar
+        }
+    }
 }

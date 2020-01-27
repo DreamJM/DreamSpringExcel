@@ -1,8 +1,7 @@
-package com.dream.spring.excel.model;
+package com.dream.spring.excel.test.model;
 
 import com.dream.spring.excel.annotation.*;
-import com.dream.spring.excel.utils.ConverterUtils;
-import com.dream.spring.excel.utils.MessageUtils;
+import com.dream.spring.excel.test.util.ConverterUtils;
 import org.apache.poi.ss.usermodel.IndexedColors;
 
 import java.util.Date;
@@ -10,10 +9,10 @@ import java.util.Date;
 /**
  * @author DreamJM
  */
-@Sheet(value = "Test", i18nSupport = false, i18n = @I18n(clazz = MessageUtils.class, method = "get"), indexIncluded = true,
-        defaultStyle = @CellStyle(fontName = "宋体"),
+@Sheet(value = "Test", i18nSupport = false, indexIncluded = true,
         categories = {@Category(value = "test.child", start = 4, end = 5)},
-        headers = {@Header(value = "test.name", field = "name", width = 15),
+        headers = {
+                @Header(value = "test.name", field = "name", width = 15, note = @HeaderNote(necessary = true, content = "test_note", i18nSupport = false)),
                 @Header(value = "test.value", field = "value"), @Header(value = "test.type", field = "type", width = 8),
                 @Header(value = "test.date", field = "date", width = 20), @Header(value = "test.childName", field = "component.childName"),
                 @Header(value = "test.childValue", field = "component.childValue")})

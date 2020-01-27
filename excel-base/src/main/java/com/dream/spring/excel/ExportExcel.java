@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.dream.spring.excel;
 
 import org.apache.poi.ss.usermodel.*;
@@ -15,28 +31,48 @@ import java.io.OutputStream;
 import java.util.*;
 
 /**
+ * Excel exporting util
+ *
  * @author DreamJM
  */
 public class ExportExcel {
 
+    /**
+     * Default sheet style paramters
+     */
     private SheetStyle sheetStyle;
 
+    /**
+     * Columns' definition
+     */
     private Column[] columns;
 
+    /**
+     * Categories' definition
+     */
     private HeaderCategory[] categories;
 
+    /**
+     * Row Data List
+     */
     private List<Map<Integer, CellData>> dataset;
 
+    /**
+     * Excel output stream
+     */
     private OutputStream out;
 
+    /**
+     * Default content cell style
+     */
     private CustomStyle defaultStyle;
 
     public ExportExcel(SheetStyle sheetStyle, Column[] columns, List<Map<Integer, CellData>> dataset, OutputStream out) {
         this(sheetStyle, columns, null, dataset, out);
     }
 
-    public ExportExcel(SheetStyle sheetStyle, Column[] columns, HeaderCategory[] categories,
-                       List<Map<Integer, CellData>> dataset, OutputStream out) {
+    public ExportExcel(SheetStyle sheetStyle, Column[] columns, HeaderCategory[] categories, List<Map<Integer, CellData>> dataset,
+                       OutputStream out) {
         this.sheetStyle = sheetStyle;
         this.columns = columns;
         this.categories = categories;
@@ -45,6 +81,11 @@ public class ExportExcel {
         this.out = out;
     }
 
+    /**
+     * Start to export excel
+     *
+     * @throws IOException IO Exception
+     */
     public void exportExcel() throws IOException {
         SXSSFWorkbook workbook = new SXSSFWorkbook();
         SXSSFSheet sheet = workbook.createSheet(sheetStyle.getTitle());
@@ -64,7 +105,7 @@ public class ExportExcel {
         for (int i = 0; i < dataset.size(); i++) {
             Map<Integer, CellData> vpd = dataset.get(i);
             SXSSFRow sheetRow = sheet.createRow(i + contentOffset);
-            if (sheetStyle.getContentRowHeight() != null && sheetStyle.getContentRowHeight() > 0) {
+            if (sheetStyle.getContentRowHeight() > 0) {
                 sheetRow.setHeight((short) (sheetStyle.getContentRowHeight() * 20));
             }
             for (int j = 0; j < columns.length; j++) {
@@ -92,7 +133,7 @@ public class ExportExcel {
             cell.setCellValue(header.getHeader());
             cell.setCellType(CellType.STRING);
             spanHeaders.add(i);
-            if (header.getWidth() != null) {
+            if (header.getWidth() > 0) {
                 sheet.setColumnWidth(i, header.getWidth() * 256);
             }
         }

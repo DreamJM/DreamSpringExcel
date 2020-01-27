@@ -1,0 +1,21 @@
+apply plugin: 'maven-publish'
+
+dependencies {
+    compile project(':excel-base')
+    compileOnly 'org.springframework.boot:spring-boot-configuration-processor:2.1.6.RELEASE'
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure:2.1.6.RELEASE'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'com.dream.spring'
+            artifactId 'excel-starter'
+            version '1.0.0'
+
+            from components.java
+            artifact sourceJar
+            artifact javadocJar
+        }
+    }
+}

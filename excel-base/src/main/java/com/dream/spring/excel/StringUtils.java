@@ -40,4 +40,8 @@ public class StringUtils {
         return String.valueOf(d);
     }
 
+    public static boolean isNullOrEmpty(String value) {
+        return value == null || "".equals(value);
+    }
+
 }

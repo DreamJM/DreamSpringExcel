@@ -23,4 +23,14 @@ subprojects {
         options.encoding = "UTF-8"
     }
     
+    task sourceJar(type: Jar) {
+        from sourceSets.main.allJava
+        archiveClassifier = 'sources'
+    }
+
+    task javadocJar(type: Jar) {
+        from javadoc
+        archiveClassifier = 'javadoc'
+    }
+    
 }
