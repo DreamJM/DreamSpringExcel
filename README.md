@@ -213,7 +213,7 @@ Refer to [ImportController](excel-test/src/main/java/com/dream/spring/excel/test
 * Check rule of columns can be defined in advance. If rule was broken, then the error information and row number will be collected 
 
 ## License
-TLVCodec is released under the [Apache 2.0 license](LICENSE)
+DreamSpringExcel is released under the [Apache 2.0 license](LICENSE)
 
     Copyright 2020 Meng Jiang.
 
