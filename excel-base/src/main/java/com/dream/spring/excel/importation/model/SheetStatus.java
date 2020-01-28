@@ -75,10 +75,6 @@ public class SheetStatus {
      */
     private Status status;
 
-    public SheetStatus() {
-
-    }
-
     public SheetStatus(Status status, int sheetNum, String sheetName, int totalCnt, int parseCnt, int writeCnt, List<ErrorLog> errors) {
         this.status = status;
         this.sheetNum = sheetNum;
@@ -89,54 +85,51 @@ public class SheetStatus {
         this.errors = errors;
     }
 
+    /**
+     * @return parsed sheet number in the imported excel
+     */
     public int getSheetNum() {
         return sheetNum;
     }
 
-    public void setSheetNum(int sheetNum) {
-        this.sheetNum = sheetNum;
-    }
-
+    /**
+     * @return sheet name
+     */
     public String getSheetName() {
         return sheetName;
     }
 
-    public void setSheetName(String sheetName) {
-        this.sheetName = sheetName;
-    }
-
+    /**
+     * @return total row count of the sheet
+     */
     public int getTotalCnt() {
         return totalCnt;
     }
 
-    public void setTotalCnt(int totalCnt) {
-        this.totalCnt = totalCnt;
-    }
-
+    /**
+     * @return parsed row count
+     */
     public int getParseCnt() {
         return parseCnt;
     }
 
-    public void setParseCnt(int parseCnt) {
-        this.parseCnt = parseCnt;
-    }
-
+    /**
+     * @return row count that has been written into storage
+     */
     public int getWriteCnt() {
         return writeCnt;
     }
 
-    public void setWriteCnt(int writeCnt) {
-        this.writeCnt = writeCnt;
-    }
-
+    /**
+     * @return error rows information
+     */
     public List<ErrorLog> getErrors() {
         return errors;
     }
 
-    public void setErrors(List<ErrorLog> errors) {
-        this.errors = errors;
-    }
-
+    /**
+     * @return current status of sheet importing
+     */
     public Status getStatus() {
         return status;
     }

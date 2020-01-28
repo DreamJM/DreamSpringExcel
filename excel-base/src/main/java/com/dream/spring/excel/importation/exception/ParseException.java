@@ -82,14 +82,23 @@ public class ParseException extends Exception {
         this.hint = hint;
     }
 
+    /**
+     * @return Error reason
+     */
     public Reason getReason() {
         return reason;
     }
 
+    /**
+     * @return Error field name
+     */
     public String getFieldName() {
         return fieldName;
     }
 
+    /**
+     * @return field format hint
+     */
     public String getHint() {
         return hint;
     }

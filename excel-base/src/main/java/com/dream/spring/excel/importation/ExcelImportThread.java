@@ -104,10 +104,16 @@ public class ExcelImportThread extends Thread implements BaseSheetImportThread.S
         }
     }
 
+    /**
+     * @param listener excel importing listener
+     */
     public void setCompleteListener(CompleteListener listener) {
         this.listener = listener;
     }
 
+    /**
+     * @return status information of importing
+     */
     public Status getStatus() {
         return new Status(status, sheetThreads.stream().map(BaseSheetImportThread::getStatus).collect(Collectors.toList()), startTime, endTime);
     }

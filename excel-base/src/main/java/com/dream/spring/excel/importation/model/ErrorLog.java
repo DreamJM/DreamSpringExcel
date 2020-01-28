@@ -52,18 +52,30 @@ public class ErrorLog {
         this.hint = exception.getHint();
     }
 
+    /**
+     * @return Error row number
+     */
     public int getRow() {
         return row;
     }
 
+    /**
+     * @return Error reason
+     */
     public ParseException.Reason getReason() {
         return reason;
     }
 
+    /**
+     * @return Field name of the error data
+     */
     public String getFieldName() {
         return fieldName;
     }
 
+    /**
+     * @return Readable format hint
+     */
     public String getHint() {
         return hint;
     }

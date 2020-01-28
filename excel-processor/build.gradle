@@ -16,7 +16,6 @@ publishing {
 
             from components.java
             artifact sourceJar
-            artifact javadocJar
         }
     }
 }

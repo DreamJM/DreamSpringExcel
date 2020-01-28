@@ -111,27 +111,45 @@ public abstract class BaseSheetImportThread<T> extends Thread {
         this.parentSheetNum = parentSheetNum;
     }
 
+    /**
+     * @param offset row offset to skip
+     */
     public void setOffSet(int offset) {
         this.offset = offset;
     }
 
+    /**
+     * @param bundleSize row size for on round parsing
+     */
     public void setBundleSize(int bundleSize) {
         this.bundleSize = bundleSize;
     }
 
+    /**
+     * @return sheet number of parsed sheet
+     */
     public int getSheetNum() {
         return sheetNum;
     }
 
+    /**
+     * @param sheet raw poi sheet to init with
+     */
     public void setSheet(Sheet sheet) {
         this.sheet = sheet;
         totalCnt = sheet.getLastRowNum() + 1 - offset;
     }
 
+    /**
+     * @param listener sheet parsing listener to set
+     */
     void setListener(SheetCompleteListener listener) {
         this.listener = listener;
     }
 
+    /**
+     * @return the depended sheet numbers of this sheet
+     */
     Set<Integer> getParentSheetNum() {
         return parentSheetNum;
     }

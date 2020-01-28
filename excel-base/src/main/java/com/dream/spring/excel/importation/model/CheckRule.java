@@ -26,12 +26,14 @@ import java.util.Set;
 public class CheckRule {
 
     /**
-     * Whether the cell data is required
+     * Whether the cell value is required. If broken, {@link com.dream.spring.excel.importation.exception.ParseException} will be thrown
+     * with reason {@link com.dream.spring.excel.importation.exception.ParseException.Reason#Empty}
      */
     private boolean required;
 
     /**
-     * Max length limitation
+     * Max length limitation. If broken, {@link com.dream.spring.excel.importation.exception.ParseException} will be thrown
+     * with reason {@link com.dream.spring.excel.importation.exception.ParseException.Reason#LengthExceeded}
      */
     private int length;
 
@@ -41,7 +43,8 @@ public class CheckRule {
     private String name;
 
     /**
-     * Regex expression
+     * Regex expression. If not matched, {@link com.dream.spring.excel.importation.exception.ParseException} will be thrown
+     * with reason {@link com.dream.spring.excel.importation.exception.ParseException.Reason#Invalid}
      */
     private String regex;
 
@@ -51,12 +54,13 @@ public class CheckRule {
     private String formatHint;
 
     /**
-     * Regex group number that will be retrieved to check with {@link #validValue Valid Value}
+     * Regex group number that will be used to retrieve the value and check with {@link #validValue Valid Value}
      */
     private Integer regexGroupNum;
 
     /**
-     * Expected ranged of valid value
+     * Expected ranged of valid value. If not contained in the set, {@link com.dream.spring.excel.importation.exception.ParseException}
+     * will be thrown with reason {@link com.dream.spring.excel.importation.exception.ParseException.Reason#RangeExceeded}
      */
     private Set<String> validValue;
 
@@ -69,38 +73,84 @@ public class CheckRule {
 
     }
 
+    /**
+     * Creates a Check Rule builder
+     *
+     * @param name Name or I18n code of the column name to be checked
+     * @return Check Rule builder
+     */
     public static Builder builder(String name) {
         return new Builder(name);
     }
 
+    /**
+     * Whether the cell value is required. If broken, {@link com.dream.spring.excel.importation.exception.ParseException} will be thrown
+     * with reason {@link com.dream.spring.excel.importation.exception.ParseException.Reason#Empty}
+     *
+     * @return {@code true} if cell value is required
+     */
     public boolean isRequired() {
         return required;
     }
 
+    /**
+     * Max length limitation. If broken, {@link com.dream.spring.excel.importation.exception.ParseException} will be thrown
+     * with reason {@link com.dream.spring.excel.importation.exception.ParseException.Reason#LengthExceeded}
+     *
+     * @return max length of cell value
+     */
     public int getLength() {
         return length;
     }
 
+    /**
+     * @return Name or I18n code of the column name to be checked
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Regex expression. If not matched, {@link com.dream.spring.excel.importation.exception.ParseException} will be thrown
+     * with reason {@link com.dream.spring.excel.importation.exception.ParseException.Reason#Invalid}
+     *
+     * @return Regex expression
+     */
     public String getRegex() {
         return regex;
     }
 
+    /**
+     * @return Format hint or hint code for the regex expression
+     */
     public String getFormatHint() {
         return formatHint;
     }
 
+    /**
+     * Regex group number that will be used to retrieve the value and check with {@link #getValidValue() Valid Value Set}
+     *
+     * @return Expected value's regex group number
+     */
     public Integer getRegexGroupNum() {
         return regexGroupNum;
     }
 
+    /**
+     * Expected ranged of valid value. If not contained in the set, {@link com.dream.spring.excel.importation.exception.ParseException}
+     * will be thrown with reason {@link com.dream.spring.excel.importation.exception.ParseException.Reason#RangeExceeded}
+     *
+     * @return valid value set
+     */
     public Set<String> getValidValue() {
         return validValue;
     }
 
+    /**
+     * When {@link #isRequired()} is false and cell data is empty, this default value will be used
+     *
+     * @return default value when empty
+     */
     public String getDefaultValue() {
         return defaultValue;
     }
@@ -113,36 +163,82 @@ public class CheckRule {
             rule.name = name;
         }
 
+        /**
+         * Whether the cell value is required. If broken, {@link com.dream.spring.excel.importation.exception.ParseException} will be thrown
+         * with reason {@link com.dream.spring.excel.importation.exception.ParseException.Reason#Empty}
+         *
+         * @param required Whether the cell value is required
+         * @return check rule builder
+         */
         public Builder setRequired(boolean required) {
             rule.required = required;
             return this;
         }
 
+        /**
+         * Max length limitation. If broken, {@link com.dream.spring.excel.importation.exception.ParseException} will be thrown
+         * with reason {@link com.dream.spring.excel.importation.exception.ParseException.Reason#LengthExceeded}
+         *
+         * @param length max length of cell value
+         * @return check rule builder
+         */
         public Builder setLength(int length) {
             rule.length = length;
             return this;
         }
 
+        /**
+         * Regex expression. If not matched, {@link com.dream.spring.excel.importation.exception.ParseException} will be thrown
+         * with reason {@link com.dream.spring.excel.importation.exception.ParseException.Reason#Invalid}
+         *
+         * @param regex regex expression to set
+         * @return check rule builder
+         */
         public Builder setRegex(String regex) {
             rule.regex = regex;
             return this;
         }
 
+        /**
+         * Format hint or hint code for the regex expression
+         *
+         * @param formatHint format hint to set
+         * @return check rule builder
+         */
         public Builder setFormatHint(String formatHint) {
             rule.formatHint = formatHint;
             return this;
         }
 
+        /**
+         * Regex group number that will be used to retrieve the value and check with {@link #getValidValue() Valid Value Set}
+         *
+         * @param regexGroupNum Expected value's regex group number
+         * @return check rule builder
+         */
         public Builder setRegexGroupNum(int regexGroupNum) {
             rule.regexGroupNum = regexGroupNum;
             return this;
         }
 
+        /**
+         * Expected ranged of valid value. If not contained in the set, {@link com.dream.spring.excel.importation.exception.ParseException}
+         * will be thrown with reason {@link com.dream.spring.excel.importation.exception.ParseException.Reason#RangeExceeded}
+         *
+         * @param validValue valid value set to check with
+         * @return check rule builder
+         */
         public Builder setValidValue(Set<String> validValue) {
             rule.validValue = validValue;
             return this;
         }
 
+        /**
+         * When {@link #isRequired()} is false and cell data is empty, this default value will be used
+         *
+         * @param defaultValue default value when empty
+         * @return check rule builder
+         */
         public Builder setDefaultValue(String defaultValue) {
             rule.defaultValue = defaultValue;
             return this;

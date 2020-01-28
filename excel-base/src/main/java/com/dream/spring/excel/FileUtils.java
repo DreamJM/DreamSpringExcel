@@ -55,7 +55,7 @@ public class FileUtils {
         if (!cacheDir.exists()) {
             cacheDir.mkdirs();
         }
-        return cacheDir;
+        return cacheDir.getAbsoluteFile();
     }
 
     /**

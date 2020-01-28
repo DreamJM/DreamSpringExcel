@@ -65,7 +65,7 @@ public class DreamExcelAutoConfiguration {
         if (properties.getI18n() != null && properties.getI18n().getClazz() != null) {
             if (properties.getI18n().getMethod() == null || "".equals(properties.getI18n().getMethod())) {
                 logger.warn("Excel i18n method not specified");
-                return null;
+                return code -> code;
             }
             Method method = properties.getI18n().getClazz().getMethod(properties.getI18n().getMethod(), String.class);
             return code -> {
@@ -77,7 +77,7 @@ public class DreamExcelAutoConfiguration {
                 return code;
             };
         }
-        return null;
+        return code -> code;
     }
 
 }

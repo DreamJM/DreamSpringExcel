@@ -39,10 +39,16 @@ public class RowData<R> {
         this.data = data;
     }
 
+    /**
+     * @return row number
+     */
     public int getRow() {
         return row;
     }
 
+    /**
+     * @return row data
+     */
     public R getData() {
         return data;
     }

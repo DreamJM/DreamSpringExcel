@@ -95,9 +95,6 @@ public class Status {
      */
     private Date endTime;
 
-    public Status() {
-    }
-
     public Status(ExcelStatus status, List<SheetStatus> sheets, Date startTime, Date endTime) {
         this.status = status;
         if (sheets != null) {
@@ -112,60 +109,53 @@ public class Status {
         this.endTime = endTime;
     }
 
+    /**
+     * @return importing status of excel
+     */
     public ExcelStatus getStatus() {
         return status;
     }
 
-    public void setStatus(ExcelStatus status) {
-        this.status = status;
-    }
-
+    /**
+     * @return total row count of excel
+     */
     public int getTotalCnt() {
         return totalCnt;
     }
 
-    public void setTotalCnt(int totalCnt) {
-        this.totalCnt = totalCnt;
-    }
-
+    /**
+     * @return parsed row count
+     */
     public int getParseCnt() {
         return parseCnt;
     }
 
-    public void setParseCnt(int parseCnt) {
-        this.parseCnt = parseCnt;
-    }
-
+    /**
+     * @return row count that has been written into storage
+     */
     public int getWriteCnt() {
         return writeCnt;
     }
 
-    public void setWriteCnt(int writeCnt) {
-        this.writeCnt = writeCnt;
-    }
-
+    /**
+     * @return status of each sheet
+     */
     public List<SheetStatus> getSheets() {
         return sheets;
     }
 
-    public void setSheets(List<SheetStatus> sheets) {
-        this.sheets = sheets;
-    }
-
+    /**
+     * @return importing start time
+     */
     public Date getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(Date startTime) {
-        this.startTime = startTime;
-    }
-
+    /**
+     * @return importing end time
+     */
     public Date getEndTime() {
         return endTime;
-    }
-
-    public void setEndTime(Date endTime) {
-        this.endTime = endTime;
     }
 
     @Override

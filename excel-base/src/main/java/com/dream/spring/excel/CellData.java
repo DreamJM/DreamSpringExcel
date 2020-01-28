@@ -44,18 +44,33 @@ public class CellData {
 
     }
 
+    /**
+     * @return cell value
+     */
     public String getValue() {
         return value;
     }
 
+    /**
+     * @return cell type
+     */
     public CellType getType() {
         return type;
     }
 
+    /**
+     * @return cell style
+     */
     public CustomStyle getStyle() {
         return style;
     }
 
+    /**
+     * Creates Cell Data Builder
+     *
+     * @param value cell value
+     * @return Cell Data Builder
+     */
     public static Builder builder(String value) {
         return new Builder(value);
     }
@@ -68,11 +83,23 @@ public class CellData {
             this.cell.value = value;
         }
 
+        /**
+         * Cell type
+         *
+         * @param type cell type to set
+         * @return Cell Data Builder
+         */
         public Builder setType(CellType type) {
             cell.type = type;
             return this;
         }
 
+        /**
+         * Cell style
+         *
+         * @param style cell style to set
+         * @return Cell Data Builder
+         */
         public Builder setStyle(CustomStyle style) {
             cell.style = style;
             return this;

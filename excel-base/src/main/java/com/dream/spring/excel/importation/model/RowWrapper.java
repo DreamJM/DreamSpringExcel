@@ -50,6 +50,9 @@ public class RowWrapper {
         this.ruleMap = ruleMap;
     }
 
+    /**
+     * @return raw row poi object
+     */
     public Row getRow() {
         return row;
     }

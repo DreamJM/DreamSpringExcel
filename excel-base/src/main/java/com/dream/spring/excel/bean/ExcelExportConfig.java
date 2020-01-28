@@ -79,83 +79,142 @@ public class ExcelExportConfig {
      */
     private boolean freezeHeader = true;
 
-
+    /**
+     * @return Default column width (in units of a character width)
+     */
     public int getDefaultWidth() {
         return defaultWidth;
     }
 
+    /**
+     * @param defaultWidth default column width to set (in units of a character width)
+     */
     public void setDefaultWidth(int defaultWidth) {
         this.defaultWidth = defaultWidth;
     }
 
+    /**
+     * @return Header row height (in units of a point)
+     */
     public int getHeaderHeight() {
         return headerHeight;
     }
 
+    /**
+     * @param headerHeight Header row height to set (in units of a point)
+     */
     public void setHeaderHeight(int headerHeight) {
         this.headerHeight = headerHeight;
     }
 
+    /**
+     * @return Category row height (in units of a point)
+     */
     public int getCategoryHeight() {
         return categoryHeight;
     }
 
+    /**
+     * @param categoryHeight Category row height to set (in units of a point)
+     */
     public void setCategoryHeight(int categoryHeight) {
         this.categoryHeight = categoryHeight;
     }
 
+    /**
+     * @return Content row height (in units of a point)
+     */
     public int getContentRowHeight() {
         return contentRowHeight;
     }
 
+    /**
+     * @param contentRowHeight Content row height to set(in units of a point)
+     */
     public void setContentRowHeight(int contentRowHeight) {
         this.contentRowHeight = contentRowHeight;
     }
 
+    /**
+     * @return Default content cell style
+     */
     public CellStyle getDefaultStyle() {
         return defaultStyle;
     }
 
+    /**
+     * @param defaultStyle Default content cell style to set
+     */
     public void setDefaultStyle(CellStyle defaultStyle) {
         this.defaultStyle = defaultStyle;
     }
 
+    /**
+     * @return Default header cell style
+     */
     public CellStyle getDefaultHeaderStyle() {
         return defaultHeaderStyle;
     }
 
+    /**
+     * @param defaultHeaderStyle Default header cell style to set
+     */
     public void setDefaultHeaderStyle(CellStyle defaultHeaderStyle) {
         this.defaultHeaderStyle = defaultHeaderStyle;
     }
 
+    /**
+     * @return Default category cell style to set
+     */
     public CellStyle getDefaultCategoryStyle() {
         return defaultCategoryStyle;
     }
 
+    /**
+     * @param defaultCategoryStyle Default category cell style to set
+     */
     public void setDefaultCategoryStyle(CellStyle defaultCategoryStyle) {
         this.defaultCategoryStyle = defaultCategoryStyle;
     }
 
+    /**
+     * @return Column offset of form table in excel sheet
+     */
     public int getColumnOffset() {
         return columnOffset;
     }
 
+    /**
+     * @param columnOffset Column offset of form table in excel sheet to set
+     */
     public void setColumnOffset(int columnOffset) {
         this.columnOffset = columnOffset;
     }
 
+    /**
+     * @return Row offset of form table in excel sheet
+     */
     public int getRowOffset() {
         return rowOffset;
     }
 
+    /**
+     * @param rowOffset Row offset of form table in excel sheet to set
+     */
     public void setRowOffset(int rowOffset) {
         this.rowOffset = rowOffset;
     }
 
+    /**
+     * @return {@code true} if the header row is frozen
+     */
     public boolean isFreezeHeader() {
         return freezeHeader;
     }
 
+    /**
+     * @param freezeHeader whether to freeze the header row
+     */
     public void setFreezeHeader(boolean freezeHeader) {
         this.freezeHeader = freezeHeader;
     }
@@ -191,50 +250,86 @@ public class ExcelExportConfig {
          */
         private VerticalAlignment verticalAlignment = VerticalAlignment.CENTER;
 
+        /**
+         * @return background color using enum of {@link IndexedColors}
+         */
         public IndexedColors getBgColor() {
             return bgColor;
         }
 
+        /**
+         * @param bgColor background color to set using enum of {@link IndexedColors}
+         */
         public void setBgColor(IndexedColors bgColor) {
             this.bgColor = bgColor;
         }
 
+        /**
+         * @return font color using enum of {@link IndexedColors}
+         */
         public IndexedColors getFontColor() {
             return fontColor;
         }
 
+        /**
+         * @param fontColor font color to set using enum of {@link IndexedColors}
+         */
         public void setFontColor(IndexedColors fontColor) {
             this.fontColor = fontColor;
         }
 
+        /**
+         * @return font family name
+         */
         public String getFontName() {
             return fontName;
         }
 
+        /**
+         * @param fontName font family name to set
+         */
         public void setFontName(String fontName) {
             this.fontName = fontName;
         }
 
+        /**
+         * @return font size
+         */
         public int getFontSize() {
             return fontSize;
         }
 
+        /**
+         * @param fontSize font size to set (number &lt;= 0 will be ignored)
+         */
         public void setFontSize(int fontSize) {
             this.fontSize = fontSize;
         }
 
+        /**
+         * @return text horizontal alignment
+         */
         public HorizontalAlignment getHorizontalAlignment() {
             return horizontalAlignment;
         }
 
+        /**
+         * @param horizontalAlignment text horizontal alignment to set
+         */
         public void setHorizontalAlignment(HorizontalAlignment horizontalAlignment) {
             this.horizontalAlignment = horizontalAlignment;
         }
 
+        /**
+         * @return text vertical alignment
+         */
         public VerticalAlignment getVerticalAlignment() {
             return verticalAlignment;
         }
 
+        /**
+         * @param verticalAlignment text vertical alignment to set
+         */
         public void setVerticalAlignment(VerticalAlignment verticalAlignment) {
             this.verticalAlignment = verticalAlignment;
         }

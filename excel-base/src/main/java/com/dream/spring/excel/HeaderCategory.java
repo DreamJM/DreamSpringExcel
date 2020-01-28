@@ -58,22 +58,42 @@ public class HeaderCategory {
 
     }
 
+    /**
+     * @return name of the category
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * @return start header column number of the category
+     */
     public int getStart() {
         return start;
     }
 
+    /**
+     * @return end header column number of the category
+     */
     public int getEnd() {
         return end;
     }
 
+    /**
+     * @return category cell style
+     */
     public CustomStyle getStyle() {
         return style;
     }
 
+    /**
+     * Creates header category builder
+     *
+     * @param name  category name
+     * @param start start header column number
+     * @param end   end header column number
+     * @return header category builder
+     */
     public static Builder builder(String name, int start, int end) {
         return new Builder(name, start, end);
     }
@@ -89,6 +109,12 @@ public class HeaderCategory {
             category.end = end;
         }
 
+        /**
+         * Category cell style to set
+         *
+         * @param style category cell style
+         * @return category builder
+         */
         public Builder setStyle(CustomStyle style) {
             category.style = style;
             return this;

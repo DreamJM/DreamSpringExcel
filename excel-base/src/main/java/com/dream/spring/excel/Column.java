@@ -29,7 +29,7 @@ public class Column {
     private String header;
 
     /**
-     * Column width
+     * Column width (in units of a character width)
      */
     private int width;
 
@@ -47,22 +47,40 @@ public class Column {
 
     }
 
+    /**
+     * @return column header name
+     */
     public String getHeader() {
         return header;
     }
 
+    /**
+     * @return column width(in units of a character width)
+     */
     public int getWidth() {
         return width;
     }
 
+    /**
+     * @return header style
+     */
     public CustomStyle getHeaderStyle() {
         return headerStyle;
     }
 
+    /**
+     * @return content cell style
+     */
     public CustomStyle getStyle() {
         return style;
     }
 
+    /**
+     * Creates Column Builder
+     *
+     * @param header column header name
+     * @return Column Builder
+     */
     public static Builder builder(String header) {
         return new Builder(header);
     }
@@ -76,16 +94,34 @@ public class Column {
             this.column.header = column;
         }
 
+        /**
+         * Column width (in units of a character width) to set. Value &lt;= 0 will be ignored
+         *
+         * @param width column width (in units of a character width)
+         * @return Column Builder
+         */
         public Builder setWidth(int width) {
             column.width = width;
             return this;
         }
 
+        /**
+         * Header cell style to set
+         *
+         * @param headerStyle header cell style
+         * @return Column Builder
+         */
         public Builder setHeaderStyle(CustomStyle headerStyle) {
             column.headerStyle = headerStyle;
             return this;
         }
 
+        /**
+         * Content cell style to set
+         *
+         * @param style content cell style
+         * @return Column Builder
+         */
         public Builder setStyle(CustomStyle style) {
             column.style = style;
             return this;
